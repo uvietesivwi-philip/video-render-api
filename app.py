@@ -1,7 +1,5 @@
 from flask import Flask, request, send_file
-from moviepy.video.io.VideoFileClip import VideoFileClip
-from moviepy.audio.io.AudioFileClip import AudioFileClip
-from moviepy.video.fx.loop import loop
+from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_videoclips
 import requests, uuid, os
 
 app = Flask(__name__)
@@ -25,8 +23,12 @@ def merge():
     video = VideoFileClip(video_path)
     audio = AudioFileClip(audio_path)
 
-    looped = loop(video, duration=audio.duration).subclip(0, audio.duration)
-    result = looped.set_audio(audio)
+    # Manually repeat the video to match or exceed audio duration
+    loops_needed = int(audio.duration // video.duration) + 1
+    clips = [video] * loops_needed
+    looped_video = concatenate_videoclips(clips).subclip(0, audio.duration)
+
+    result = looped_video.set_audio(audio)
     result.write_videofile(output_path, codec="libx264", audio_codec="aac")
 
     return send_file(output_path, mimetype="video/mp4")
