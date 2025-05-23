@@ -1,4 +1,4 @@
 Flask
-git+https://github.com/Zulko/moviepy.git
 requests
 gunicorn
+git+https://github.com/Zulko/moviepy.git
