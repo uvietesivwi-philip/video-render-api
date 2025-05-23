@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, send_file
-import moviepy
-from moviepy.video.io.VideoFileClip import VideoFileClip
-from moviepy.audio.io.AudioFileClip import AudioFileClip
+from moviepy.editor import VideoFileClip, AudioFileClip
+from moviepy.video.fx.all import loop  
 import requests, uuid, os
 
 app = Flask(__name__)
@@ -25,7 +24,8 @@ def merge():
     video = VideoFileClip(video_path)
     audio = AudioFileClip(audio_path)
 
-    looped = video.loop(duration=audio.duration).subclip(0, audio.duration)
+   
+    looped = loop(video, duration=audio.duration).subclip(0, audio.duration)
     result = looped.set_audio(audio)
     result.write_videofile(output_path, codec="libx264", audio_codec="aac")
 
