@@ -10,46 +10,49 @@ app = Flask(__name__)
 def render():
     data = request.json
     audio_url = data["audio_url"]
-    subtitle_url = data["subtitle_url"]
-    images = data["images"]
+    video_url = data["video_url"]
 
     os.makedirs("assets", exist_ok=True)
     os.makedirs("static", exist_ok=True)
 
-    for i, url in enumerate(images):
-        img = requests.get(url)
-        with open(f"assets/img{i:02d}.png", "wb") as f:
-            f.write(img.content)
-
+    # Download audio
+    audio_path = "assets/audio.mp3"
     audio = requests.get(audio_url)
-    with open("assets/audio.mp3", "wb") as f:
+    with open(audio_path, "wb") as f:
         f.write(audio.content)
 
-    subs = requests.get(subtitle_url)
-    with open("assets/subs.srt", "wb") as f:
-        f.write(subs.content)
+    # Download video
+    video_path = "assets/video.mp4"
+    video = requests.get(video_url)
+    with open(video_path, "wb") as f:
+        f.write(video.content)
 
-    with open("assets/inputs.txt", "w") as f:
-        for i in range(len(images)):
-            f.write(f"file 'img{i:02d}.png'\nduration 3\n")
-        f.write(f"file 'img{len(images)-1:02d}.png'\n")
-
+    # Output path
     out_name = f"video_{uuid.uuid4().hex}.mp4"
+    out_path = f"static/{out_name}"
+
+    # FFmpeg command: loop video, match audio, scale to vertical
     subprocess.call([
         "ffmpeg",
+        "-stream_loop", "-1",
+        "-i", video_path,
+        "-i", audio_path,
+        "-vf", "scale=1080:1920",
+        "-shortest",
+        "-c:v", "libx264",
+        "-c:a", "aac",
+        "-pix_fmt", "yuv420p",
         "-y",
-        "-f", "concat", "-safe", "0", "-i", "assets/inputs.txt",
-        "-i", "assets/audio.mp3",
-        "-vf", "subtitles=assets/subs.srt",
-        "-pix_fmt", "yuv420p", "-shortest",
-        f"static/{out_name}"
+        out_path
     ])
 
     return jsonify({"video_url": f"https://{request.host}/static/{out_name}"})
 
+
 @app.route('/static/<path:filename>')
 def serve_video(filename):
     return send_from_directory("static", filename)
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000)
