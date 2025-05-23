@@ -3,6 +3,7 @@ import subprocess
 import uuid
 import requests
 import os
+import shutil
 
 app = Flask(__name__)
 
@@ -12,6 +13,7 @@ def render():
     audio_url = data["audio_url"]
     video_url = data["video_url"]
 
+    # Create necessary folders
     os.makedirs("assets", exist_ok=True)
     os.makedirs("static", exist_ok=True)
 
@@ -27,25 +29,28 @@ def render():
     with open(video_path, "wb") as f:
         f.write(video.content)
 
-    # Output path
+    # Generate output file path
     out_name = f"video_{uuid.uuid4().hex}.mp4"
     out_path = f"static/{out_name}"
 
-    # FFmpeg command: loop video, match audio, scale to vertical
+    # FFmpeg command: loop video, scale to vertical, trim to audio
     subprocess.call([
         "ffmpeg",
-        "-stream_loop", "-1",
+        "-stream_loop", "-1",             # Loop video indefinitely
         "-i", video_path,
         "-i", audio_path,
-        "-vf", "scale=1080:1920",
-        "-shortest",
+        "-vf", "scale=1080:1920",         # Enforce TikTok vertical resolution
+        "-shortest",                      # Cut off at end of audio
         "-c:v", "libx264",
         "-c:a", "aac",
         "-pix_fmt", "yuv420p",
-        "-y",
-        out_path
+        "-y", out_path                    # Overwrite output if needed
     ])
 
+    # ✅ Clean up temp assets
+    shutil.rmtree("assets")
+
+    # Return public video link
     return jsonify({"video_url": f"https://{request.host}/static/{out_name}"})
 
 
