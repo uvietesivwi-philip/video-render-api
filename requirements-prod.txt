@@ -1,4 +1,4 @@
 Flask
-moviepy[imageio,ffmpeg]
+git+https://github.com/Zulko/moviepy.git
 requests
 gunicorn
