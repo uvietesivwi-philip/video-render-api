@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify, send_file
-from moviepy.editor import VideoFileClip, AudioFileClip
+import moviepy
+from moviepy.video.io.VideoFileClip import VideoFileClip
+from moviepy.audio.io.AudioFileClip import AudioFileClip
 import requests, uuid, os
 
 app = Flask(__name__)
