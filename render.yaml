@@ -1,10 +1,7 @@
 services:
   - type: web
-    name: video-render-api
+    name: moviepy-render-api
     env: python
-    buildCommand: "apt-get update && apt-get install -y ffmpeg && pip install -r requirements.txt"
-    startCommand: "python main.py"
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python app.py"
     plan: free
-    envVars: []
-    autoDeploy: true
-    region: oregon
