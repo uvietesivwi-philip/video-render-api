@@ -1,4 +1,4 @@
 Flask
-moviepy
+moviepy[imageio,ffmpeg]
 requests
 gunicorn
